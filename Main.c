@@ -65,92 +65,163 @@ void importacao(char *argumentos) {
     fclose(candidatosAux);
 }
 
-void executa_operacoes(char *argumentos) {
-    FILE *arquivoCopia;
+void executa_operacoes(char *nomeArquivoOperacao) {
+    // printf("\n***** PED: %d ****\n", topoPed());
     FILE *operacoes;
+
     char op;
     char busca[7], comparacao[7], excluiDado[7], elementoBuscado[64];
     int posicao = 0, codIgual = 0, encontrouChave = 0;
     int cabeca;
 
-    operacoes = abreArquivoLeitura(argumentos);
+    operacoes = abreArquivoAtualizacao(nomeArquivoOperacao);
 
     while (!feof(operacoes)) {
         op = fgetc(operacoes);
 
         if (op == 'b') {
-            encontrouChave = 0;
-            posicao = 0;
-
-            arquivoCopia = abreArquivoLeitura("dados.dat");
-
             fgetc(operacoes);
             fgets(busca, 7, operacoes);
+
+            int posicaoRegistro = buscaRnnResgistro(busca);
+
             printf("Busca pelo registro de chave %s\n", busca);
-            while (!feof(arquivoCopia)) {
-                fseek(arquivoCopia, (posicao * 64) + sizeof(int), SEEK_SET);
-                fgets(comparacao, 7, arquivoCopia);
-                if ((strcmp(busca, comparacao)) == 0) {
-                    fgets(elementoBuscado, 64, arquivoCopia);
-                    printf("%s%s(RRN = %d - byte-offset %ld)\n", busca, elementoBuscado, posicao, (posicao * 64) + sizeof(int));
-                    // fseek(arquivoCopia, 0, SEEK_SET);
-                    encontrouChave = 1;
-                    posicao = 0;
-                    break;
-                } else {
-                    posicao++;
-                }
+            if (posicaoRegistro != -1) {
+                mostraRegistro(posicaoRegistro);
+            } else {
+                printf("    CHAVE INVALIDA - Registro nao encontrado\n");
             }
-
-            if (encontrouChave == 0) {
-                printf("Chave invalida - Registro nao encontrado\n");
-            }
-
-            fclose(arquivoCopia);
 
         } else if (op == 'i') {
-            arquivoCopia = abreArquivoLeitura("dados.dat");
             printf("INSERINDO\n");
-            fclose(arquivoCopia);
-
         } else if (op == 'r') {
-            cabeca = topoPed();
-
-            encontrouChave = 0;
-            posicao = 0;
-
-            arquivoCopia = abreArquivoLeitura("dados.dat");
-
             fgetc(operacoes);
-            fgets(excluiDado, 7, operacoes);
-            printf("Remocao do registro de chave %s\n", excluiDado);
-            while (!feof(arquivoCopia)) {
-                fseek(arquivoCopia, (posicao * 64) + sizeof(int), SEEK_SET);
-                fgets(comparacao, 7, arquivoCopia);
-                if ((strcmp(excluiDado, comparacao)) == 0) {
-                    fgets(elementoBuscado, 64, arquivoCopia);
-                    printf("Posicao RRN = %d  (byte-offset %ld)\n", posicao, (posicao * 64) + sizeof(int));
-                    fseek(arquivoCopia, (posicao * 64) + sizeof(int), SEEK_SET);
-                    //fprintf(arquivoCopia, "*%d", cabeca);
-                    fwrite(&cabeca, sizeof(int), 1, arquivoCopia);
-                    fseek(arquivoCopia, 0, SEEK_SET);
-                    // fprintf(arquivoCopia, "%d", posicao);
-                    fwrite(&posicao, sizeof(int), 1, arquivoCopia);
-                    encontrouChave = 1;
-                    posicao = 0;
-                    break;
-                } else {
-                    posicao++;
-                }
-            }
+            fgets(busca, 7, operacoes);
 
-            if (encontrouChave == 0) {
-                printf("Chave invalida - Registro nao encontrado\n");
-            }
-
-            fclose(arquivoCopia);
+            printf("REMOCAO pelo registro de chave %s\n", busca);
+            removeRegistroPelaChave(busca);
+        }
+        if (op == 'i' || op == 'b' || op == 'r') {
+            puts("---\n");
         }
     }
+
+    printf("\n***** PED: %d ****\n", topoPed());
+}
+
+void removeRegistroPelaChave(char *chave) {
+    FILE *dados = abreArquivoAtualizacao("dados.dat");
+    int posicaoRegistro = buscaRnnResgistro(chave);
+    int cabeca = topoPed();
+
+    if (posicaoRegistro == -1) {
+        printf("    CHAVE INVALIDA - Registro nao encontrado\n");
+        return;
+    }
+
+    mostraRegistro(posicaoRegistro);
+
+    fwrite(&posicaoRegistro, sizeof(int), 1, dados);
+    fseek(dados, byteOffsetApartirDoRNN(posicaoRegistro), SEEK_SET);
+    fputc('*', dados);
+    fwrite(&cabeca, sizeof(int), 1, dados);
+
+    fclose(dados);
+}
+
+int buscaRnnResgistro(char *chave) {
+    FILE *dados = abreArquivoAtualizacao("dados.dat");
+    int posicao = 0;
+    char chaveDoRegistro[7];
+    char registro;
+    bool encontrouChave = false;
+
+    while (!feof(dados)) {
+        fseek(dados, byteOffsetApartirDoRNN(posicao), SEEK_SET);
+        fgets(chaveDoRegistro, 7, dados);
+
+        if ((strcmp(chave, chaveDoRegistro)) == 0) {
+            encontrouChave = true;
+            break;
+        } else {
+            posicao++;
+        }
+    }
+
+    if (!encontrouChave) {
+        posicao = -1;
+    }
+
+    fclose(dados);
+
+    return posicao;
+}
+
+void mostraRegistro(int posicao) {
+    FILE *dados = abreArquivoAtualizacao("dados.dat");
+    char buffer[64];
+    int byteoffset;
+
+    byteoffset = byteOffsetApartirDoRNN(posicao);
+
+    fseek(dados, byteoffset, SEEK_SET);
+    fread(buffer, sizeof(char), 64, dados);
+
+    printf("    %s - (RNN: %d, byte-offset: %d )\n", buffer, posicao, byteoffset);
+
+    fclose(dados);
+}
+
+int topoPed() {
+    FILE *arquivoCopia;
+    int topoPed;
+
+    arquivoCopia = abreArquivoAtualizacao("dados.dat");
+
+    fread(&topoPed, sizeof(int), 1, arquivoCopia);
+    fclose(arquivoCopia);
+
+    return topoPed;
+}
+
+int byteOffsetApartirDoRNN(int rnn) {
+    return (rnn * 64) + sizeof(int);
+}
+
+FILE *criaArquivoEscrita(char *nomeArquivo) {
+    /*
+        Ambos r+e w+podem ler e gravar em um arquivo. No entanto, r+ não exclui o conteúdo do
+        arquivo e não cria um novo arquivo se tal arquivo não existir, enquanto w+ exclui o 
+        conteúdo do arquivo e o cria se ele não existir.
+
+        URL: https://stackoverflow.com/questions/21113919/difference-between-r-and-w-in-fopen
+    */
+    FILE *arquivo = fopen(nomeArquivo, "w+");
+
+    if (arquivo == NULL) {
+        fprintf(stderr, "Nao foi possivel abrir o aquivo %s\n", nomeArquivo);
+        exit(EXIT_FAILURE);
+    }
+
+    return arquivo;
+}
+
+FILE *abreArquivoAtualizacao(char *nomeArquivo) {
+    /*
+        Ambos r+e w+podem ler e gravar em um arquivo. No entanto, r+ não exclui o conteúdo do
+        arquivo e não cria um novo arquivo se tal arquivo não existir, enquanto w+ exclui o 
+        conteúdo do arquivo e o cria se ele não existir.
+
+        URL: https://stackoverflow.com/questions/21113919/difference-between-r-and-w-in-fopen
+    */
+    FILE *arquivo = fopen(nomeArquivo, "r+");
+
+    if (arquivo == NULL) {
+        fprintf(stderr, "Nao foi possivel abrir o aquivo %s\n", nomeArquivo);
+        exit(EXIT_FAILURE);
+    }
+
+    return arquivo;
 }
 
 int main(int numeroArgumentos, char *argumentos[]) {
