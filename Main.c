@@ -2,6 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 
+void importacao(char *);
+void executa_operacoes(char *);
+
+int topoPed();
+
 int topoPed() {
     FILE *arquivoCopia;
     int topoPed;
@@ -10,8 +15,6 @@ int topoPed() {
     fread(&topoPed, sizeof(int), 1, arquivoCopia);
 
     fclose(arquivoCopia);
-
-    printf("\n\n%d********\n\n", topoPed);
 
     return topoPed;
 }
