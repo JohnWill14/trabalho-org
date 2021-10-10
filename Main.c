@@ -6,11 +6,49 @@ void importacao(char *);
 void executa_operacoes(char *);
 
 int topoPed();
+FILE *criaArquivoEscrita(char *);
+FILE *abreArquivoLeitura(char *);
+
+    FILE *criaArquivoEscrita(char *nomeArquivo) {
+    /*
+        Ambos r+e w+podem ler e gravar em um arquivo. No entanto, r+ não exclui o conteúdo do
+        arquivo e não cria um novo arquivo se tal arquivo não existir, enquanto w+ exclui o 
+        conteúdo do arquivo e o cria se ele não existir.
+
+        URL: https://stackoverflow.com/questions/21113919/difference-between-r-and-w-in-fopen
+    */
+    FILE *arquivo = fopen(nomeArquivo, "w+");
+
+    if (arquivo == NULL) {
+        fprintf(stderr, "Nao foi possivel abrir o aquivo %s\n", nomeArquivo);
+        exit(EXIT_FAILURE);
+    }
+
+    return arquivo;
+}
+
+FILE *abreArquivoLeitura(char *nomeArquivo) {
+    /*
+        Ambos r+e w+podem ler e gravar em um arquivo. No entanto, r+ não exclui o conteúdo do
+        arquivo e não cria um novo arquivo se tal arquivo não existir, enquanto w+ exclui o 
+        conteúdo do arquivo e o cria se ele não existir.
+
+        URL: https://stackoverflow.com/questions/21113919/difference-between-r-and-w-in-fopen
+    */
+    FILE *arquivo = fopen(nomeArquivo, "r+");
+
+    if (arquivo == NULL) {
+        fprintf(stderr, "Nao foi possivel abrir o aquivo %s\n", nomeArquivo);
+        exit(EXIT_FAILURE);
+    }
+
+    return arquivo;
+}
 
 int topoPed() {
     FILE *arquivoCopia;
     int topoPed;
-    arquivoCopia = fopen("dados.dat", "r");
+    arquivoCopia = abreArquivoLeitura("dados.dat");
 
     fread(&topoPed, sizeof(int), 1, arquivoCopia);
 
@@ -24,15 +62,15 @@ void importacao(char *argumentos) {
     FILE *candidatos;
     FILE *candidatosAux;
 
-    arquivoCopia = fopen("dados.dat", "w");
+    arquivoCopia = criaArquivoEscrita("dados.dat");
 
     char letra, proxLetra;
     int contPipe = 0;
     int cont = 0;
     int cabeca = -1;
 
-    candidatos = fopen(argumentos, "r");
-    candidatosAux = fopen(argumentos, "r");
+    candidatos = abreArquivoLeitura(argumentos);
+    candidatosAux = abreArquivoLeitura(argumentos);
 
     letra = fgetc(candidatos);
     proxLetra = fgetc(candidatosAux);
@@ -78,11 +116,7 @@ void executa_operacoes(char *argumentos) {
     int posicao = 0, codIgual = 0, encontrouChave = 0;
     int cabeca;
 
-    operacoes = fopen(argumentos, "r");
-
-    // if (arquivoCopia == NULL) {
-    //     printf("\nErro arquivo copia inexistente");
-    // }
+    operacoes = abreArquivoLeitura(argumentos);
 
     while (!feof(operacoes)) {
         op = fgetc(operacoes);
@@ -91,7 +125,7 @@ void executa_operacoes(char *argumentos) {
             encontrouChave = 0;
             posicao = 0;
 
-            arquivoCopia = fopen("dados.dat", "r");
+            arquivoCopia = abreArquivoLeitura("dados.dat");
 
             fgetc(operacoes);
             fgets(busca, 7, operacoes);
@@ -118,7 +152,7 @@ void executa_operacoes(char *argumentos) {
             fclose(arquivoCopia);
 
         } else if (op == 'i') {
-            arquivoCopia = fopen("dados.dat", "r");
+            arquivoCopia = abreArquivoLeitura("dados.dat");
             printf("INSERINDO\n");
             fclose(arquivoCopia);
 
@@ -128,7 +162,7 @@ void executa_operacoes(char *argumentos) {
             encontrouChave = 0;
             posicao = 0;
 
-            arquivoCopia = fopen("dados.dat", "r+");
+            arquivoCopia = abreArquivoLeitura("dados.dat");
 
             fgetc(operacoes);
             fgets(excluiDado, 7, operacoes);
