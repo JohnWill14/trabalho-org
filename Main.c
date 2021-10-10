@@ -1,61 +1,18 @@
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-void importacao(char *);
-void executa_operacoes(char *);
+FILE *criaArquivoEscrita(char *);
+FILE *abreArquivoAtualizacao(char *);
 
 int topoPed();
-FILE *criaArquivoEscrita(char *);
-FILE *abreArquivoLeitura(char *);
-
-    FILE *criaArquivoEscrita(char *nomeArquivo) {
-    /*
-        Ambos r+e w+podem ler e gravar em um arquivo. No entanto, r+ não exclui o conteúdo do
-        arquivo e não cria um novo arquivo se tal arquivo não existir, enquanto w+ exclui o 
-        conteúdo do arquivo e o cria se ele não existir.
-
-        URL: https://stackoverflow.com/questions/21113919/difference-between-r-and-w-in-fopen
-    */
-    FILE *arquivo = fopen(nomeArquivo, "w+");
-
-    if (arquivo == NULL) {
-        fprintf(stderr, "Nao foi possivel abrir o aquivo %s\n", nomeArquivo);
-        exit(EXIT_FAILURE);
-    }
-
-    return arquivo;
-}
-
-FILE *abreArquivoLeitura(char *nomeArquivo) {
-    /*
-        Ambos r+e w+podem ler e gravar em um arquivo. No entanto, r+ não exclui o conteúdo do
-        arquivo e não cria um novo arquivo se tal arquivo não existir, enquanto w+ exclui o 
-        conteúdo do arquivo e o cria se ele não existir.
-
-        URL: https://stackoverflow.com/questions/21113919/difference-between-r-and-w-in-fopen
-    */
-    FILE *arquivo = fopen(nomeArquivo, "r+");
-
-    if (arquivo == NULL) {
-        fprintf(stderr, "Nao foi possivel abrir o aquivo %s\n", nomeArquivo);
-        exit(EXIT_FAILURE);
-    }
-
-    return arquivo;
-}
-
-int topoPed() {
-    FILE *arquivoCopia;
-    int topoPed;
-    arquivoCopia = abreArquivoLeitura("dados.dat");
-
-    fread(&topoPed, sizeof(int), 1, arquivoCopia);
-
-    fclose(arquivoCopia);
-
-    return topoPed;
-}
+int byteOffsetApartirDoRNN(int);
+void mostraRegistro(int);
+int buscaRnnResgistro(char *);
+void importacao(char *);
+void executa_operacoes(char *);
+void removeRegistroPelaChave(char *);
 
 void importacao(char *argumentos) {
     FILE *arquivoCopia;
@@ -69,8 +26,8 @@ void importacao(char *argumentos) {
     int cont = 0;
     int cabeca = -1;
 
-    candidatos = abreArquivoLeitura(argumentos);
-    candidatosAux = abreArquivoLeitura(argumentos);
+    candidatos = abreArquivoAtualizacao(argumentos);
+    candidatosAux = abreArquivoAtualizacao(argumentos);
 
     letra = fgetc(candidatos);
     proxLetra = fgetc(candidatosAux);
