@@ -170,7 +170,8 @@ void removeRegistroPelaChave(char *chave) {
         return;
     }
 
-    mostraRegistro(posicaoRegistro);
+    printf("    Registro removido!\n");
+    printf("    Posicao: RRN = %d (byte-offset %d)\n", posicaoRegistro, byteOffsetApartirDoRNN(posicaoRegistro));
 
     fwrite(&posicaoRegistro, sizeof(int), 1, dados);
     fseek(dados, byteOffsetApartirDoRNN(posicaoRegistro), SEEK_SET);
