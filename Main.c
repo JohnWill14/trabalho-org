@@ -86,28 +86,78 @@ void executa_operacoes(char *nomeArquivoOperacao) {
 
             int posicaoRegistro = buscaRnnResgistro(busca);
 
-            printf("Busca pelo registro de chave %s\n", busca);
+            printf("Busca pelo registro de chave \"%s\"\n", busca);
             if (posicaoRegistro != -1) {
                 mostraRegistro(posicaoRegistro);
             } else {
                 printf("    CHAVE INVALIDA - Registro nao encontrado\n");
             }
 
-        } else if (op == 'i') {
-            printf("INSERINDO\n");
         } else if (op == 'r') {
             fgetc(operacoes);
             fgets(busca, 7, operacoes);
 
-            printf("REMOCAO pelo registro de chave %s\n", busca);
+            printf("REMOCAO pelo registro de chave \"%s\"\n", busca);
             removeRegistroPelaChave(busca);
+        } else if (op == 'i') {
+            fgetc(operacoes);
+            char registro[64];
+            char chave[8];
+
+            leiaRegistro(registro, operacoes);
+
+            for (int i = 0; i < 6; i++) {
+                chave[i] = registro[i];
+            }
+            chave[7] = '\0';
+
+            printf("Insercao do registro de chave \"%s\"\n", chave);
+
+            inseriRegistro(registro);
         }
         if (op == 'i' || op == 'b' || op == 'r') {
             puts("---\n");
         }
     }
+}
 
-    printf("\n***** PED: %d ****\n", topoPed());
+void leiaRegistro(char registro[64], FILE *arquivo) {
+    int contPipe = 0;
+    int tamanhoRegistro = 0;
+
+    while (tamanhoRegistro < 64) {
+        if (contPipe < 4) {
+            registro[tamanhoRegistro] = fgetc(arquivo);
+
+            if (registro[tamanhoRegistro] == '|') {
+                contPipe += 1;
+            }
+        } else {
+            registro[tamanhoRegistro] = '\0';
+        }
+
+        tamanhoRegistro += 1;
+    }
+}
+
+void inseriRegistro(char *registro) {
+    int cabeca = topoPed();
+    int proxEspaco = proxPed(cabeca);
+
+    FILE *dados = abreArquivoAtualizacao("dados.dat");
+
+    if (cabeca == -1) {
+        puts("  Inseri no fim do arquivo");
+        fseek(dados, 0, SEEK_END);
+        fwrite(registro, sizeof(char), 64, dados);
+    } else {
+        printf("    Local: RRN = %d (byte-offset %d) [reutilizado]\n", cabeca, byteOffsetApartirDoRNN(cabeca));
+        fwrite(&proxEspaco, sizeof(int), 1, dados);
+        fseek(dados, byteOffsetApartirDoRNN(cabeca), SEEK_SET);
+        fwrite(registro, sizeof(char), 64, dados);
+    }
+
+    fclose(dados);
 }
 
 void removeRegistroPelaChave(char *chave) {
@@ -180,6 +230,7 @@ int topoPed() {
     arquivoCopia = abreArquivoAtualizacao("dados.dat");
 
     fread(&topoPed, sizeof(int), 1, arquivoCopia);
+
     fclose(arquivoCopia);
 
     return topoPed;
