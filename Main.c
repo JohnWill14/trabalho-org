@@ -224,6 +224,47 @@ void mostraRegistro(int posicao) {
     fclose(dados);
 }
 
+void imprime_ped() {
+    int valor = topoPed();
+    int cont = 1;
+
+    if (valor == -1) {
+        puts("PED vazia !!!");
+    } else {
+        while (true) {
+            printf("%d", valor);
+            valor = proxPed(valor);
+
+            if (valor != -1) {
+                cont += 1;
+                printf(" - ");
+            } else {
+                puts("");
+                break;
+            }
+        }
+        printf("Tamanho da PED: %d\n", cont);
+    }
+}
+
+int proxPed(int posicao) {
+    if (posicao == -1) {
+        return -1;
+    }
+
+    FILE *arquivoCopia;
+    int valor;
+
+    arquivoCopia = abreArquivoAtualizacao("dados.dat");
+
+    fseek(arquivoCopia, byteOffsetApartirDoRNN(posicao) + 1, SEEK_SET);
+    fread(&valor, sizeof(int), 1, arquivoCopia);
+
+    fclose(arquivoCopia);
+
+    return valor;
+}
+
 int topoPed() {
     FILE *arquivoCopia;
     int topoPed;
@@ -289,7 +330,7 @@ int main(int numeroArgumentos, char *argumentos[]) {
 
     } else if (numeroArgumentos == 2 && strcmp(argumentos[1], "-p") == 0) {
         printf("Modo de impressao da PED ativado ...\n");
-        //imprime_ped();
+        imprime_ped();
 
     } else {
         fprintf(stderr, "Argumentos incorretos!\n");
