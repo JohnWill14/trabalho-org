@@ -70,13 +70,10 @@ void importacao(char *argumentos) {
 }
 
 void executa_operacoes(char *nomeArquivoOperacao) {
-    // printf("\n***** PED: %d ****\n", topoPed());
     FILE *operacoes;
 
     char op;
-    char busca[7], comparacao[7], excluiDado[7], elementoBuscado[64];
-    int posicao = 0, codIgual = 0, encontrouChave = 0;
-    int cabeca;
+    char busca[7];
 
     operacoes = abreArquivoAtualizacao(nomeArquivoOperacao);
 
