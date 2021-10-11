@@ -7,12 +7,16 @@ FILE *criaArquivoEscrita(char *);
 FILE *abreArquivoAtualizacao(char *);
 
 int topoPed();
+int proxPed(int);
 int byteOffsetApartirDoRNN(int);
 void mostraRegistro(int);
 int buscaRnnResgistro(char *);
 void importacao(char *);
+void leiaRegistro(char *, FILE *);
+void inseriRegistro(char *);
 void executa_operacoes(char *);
 void removeRegistroPelaChave(char *);
+void imprime_ped();
 
 void importacao(char *argumentos) {
     FILE *arquivoCopia;
